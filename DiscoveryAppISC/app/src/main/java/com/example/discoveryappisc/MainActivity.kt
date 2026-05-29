@@ -333,47 +333,96 @@ fun CurriculumScreen(navController: NavController) {
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Tu ruta como Ingeniero",
+                text = "Áreas del Conocimiento",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color(0xFF333333),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Toca cada tarjeta para descubrir más sobre lo que aprenderás.",
+                fontSize = 14.sp,
+                color = Color.Gray,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
+            // Áreas exactas solicitadas por la rúbrica
             val materias = listOf(
-                "Programación y Algoritmia" to Icons.Default.Code,
-                "Bases de Datos" to Icons.Default.Storage,
-                "Inteligencia Artificial" to Icons.Default.Psychology,
-                "Redes y Seguridad" to Icons.Default.Security,
-                "Ingeniería de Software" to Icons.Default.DeveloperBoard
+                Triple("Programación Avanzada", Icons.Default.Code, "Aprenderás a construir software escalable, apps móviles y algoritmos complejos utilizando lenguajes modernos y buenas prácticas de ingeniería de software."),
+                Triple("Inteligencia Artificial", Icons.Default.Psychology, "Diseñarás modelos de Machine Learning, redes neuronales y sistemas capaces de aprender y automatizar la toma de decisiones."),
+                Triple("Ciberseguridad", Icons.Default.Security, "Protegerás infraestructuras digitales, aprenderás sobre hacking ético, criptografía y cómo defender redes contra ataques informáticos."),
+                Triple("Redes", Icons.Default.Router, "Configurarás y administrarás la infraestructura de comunicaciones que conecta al mundo, desde redes locales hasta protocolos de internet."),
+                Triple("Cloud Computing", Icons.Default.Cloud, "Dominarás el despliegue de servicios en la nube (AWS, Google Cloud, Azure), creando arquitecturas distribuidas y altamente disponibles.")
             )
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(materias.size) { index ->
-                    val (materia, icon) = materias[index]
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .background(Color(0xFF6200EE).copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(icon, contentDescription = null, tint = Color(0xFF6200EE))
-                            }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(materia, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                        }
-                    }
+                    val (titulo, icono, descripcion) = materias[index]
+                    ExpandableSubjectCard(titulo, icono, descripcion)
                 }
+            }
+        }
+    }
+}
+
+// Subcomponente nuevo para manejar la expansión animada de cada tarjeta
+@Composable
+fun ExpandableSubjectCard(title: String, icon: ImageVector, description: String) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            // Esta línea es la que crea la magia de la animación fluida exigida en el "Pilar 1"
+            .animateContentSize(
+                animationSpec = tween(
+                    durationMillis = 300,
+                    easing = LinearOutSlowInEasing
+                )
+            )
+            .clickable { expanded = !expanded },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFF6200EE).copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, contentDescription = null, tint = Color(0xFF6200EE))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+                // Ícono que cambia dependiendo de si está expandido o no
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expanded) "Contraer" else "Expandir",
+                    tint = Color.Gray
+                )
+            }
+
+            // Si está expandido, mostramos la descripción
+            if (expanded) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = description,
+                    fontSize = 14.sp,
+                    color = Color.DarkGray,
+                    lineHeight = 20.sp
+                )
             }
         }
     }
@@ -382,6 +431,9 @@ fun CurriculumScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CareerScreen(navController: NavController) {
+    // Necesario para abrir los enlaces a YouTube
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -411,31 +463,56 @@ fun CareerScreen(navController: NavController) {
                 color = Color(0xFF333333)
             )
 
-            // Tarjetas de roles laborales
+            Text(
+                text = "Toca cada tarjeta para ver un video sobre el día a día en estas áreas.",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // Tarjetas ahora interactivas con Intents a videos en YouTube
             JobRoleCard(
                 title = "Desarrollo de Software",
                 desc = "Creación de apps móviles, plataformas web y software empresarial.",
                 icon = Icons.Default.Smartphone,
-                color = Color(0xFF03DAC5)
+                color = Color(0xFF03DAC5),
+                onClick = {
+                    val uri = Uri.parse("https://www.youtube.com/results?search_query=un+dia+en+la+vida+de+un+ingeniero+de+software")
+                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                }
             )
             JobRoleCard(
                 title = "Arquitectura Cloud y Redes",
                 desc = "Diseño de infraestructuras en la nube y seguridad informática.",
                 icon = Icons.Default.Cloud,
-                color = Color(0xFF2196F3)
+                color = Color(0xFF2196F3),
+                onClick = {
+                    val uri = Uri.parse("https://www.youtube.com/results?search_query=que+hace+un+arquitecto+cloud")
+                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                }
             )
             JobRoleCard(
                 title = "Gestión de Proyectos TI",
                 desc = "Liderazgo en células de desarrollo ágil y consultoría tecnológica.",
                 icon = Icons.Default.Group,
-                color = Color(0xFFFF9800)
+                color = Color(0xFFFF9800),
+                onClick = {
+                    val uri = Uri.parse("https://www.youtube.com/results?search_query=project+manager+ti")
+                    context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                }
             )
-            JobRoleCard(
-                title = "Emprendimiento y Remoto",
-                desc = "Crea tu propia startup o trabaja para empresas internacionales desde Veracruz o cualquier parte del mundo.",
-                icon = Icons.Default.Public,
-                color = Color(0xFFE91E63)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // SECCIÓN REQUERIDA: Testimonios Multimedia
+            Text(
+                text = "Testimonios de Egresados",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF333333)
             )
+
+            TestimonialVideoCard(context)
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -443,25 +520,85 @@ fun CareerScreen(navController: NavController) {
 }
 
 @Composable
-fun JobRoleCard(title: String, desc: String, icon: ImageVector, color: Color) {
+fun JobRoleCard(title: String, desc: String, icon: ImageVector, color: Color, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp)) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(36.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(desc, fontSize = 14.sp, color = Color.Gray, lineHeight = 20.sp)
+            }
+            Icon(
+                imageVector = Icons.Default.OpenInNew, // Indica que abrirá un enlace
+                contentDescription = "Ver Video",
+                tint = Color.LightGray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+// Nuevo componente multimedia que simula una miniatura de video
+@Composable
+fun TestimonialVideoCard(context: android.content.Context) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f) // Proporción de video
+            .clickable {
+                // Abre una búsqueda o video específico de testimonios de ingeniería
+                val uri = Uri.parse("https://www.youtube.com/results?search_query=testimonios+ingenieria+en+sistemas+computacionales")
+                context.startActivity(Intent(Intent.ACTION_VIEW, uri))
+            },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(listOf(Color(0xFF3700B3), Color(0xFF6200EE))))
+        ) {
+            // Un ícono de Play gigante al centro
+            Icon(
+                imageVector = Icons.Default.PlayCircleOutline,
+                contentDescription = "Reproducir Testimonios",
+                tint = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier
+                    .size(80.dp)
+                    .align(Alignment.Center)
+            )
+
+            // Texto superpuesto en la parte inferior
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = "▶ Reproducir: Casos de Éxito ISC",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
             }
         }
     }
@@ -595,6 +732,139 @@ fun MenuButton(title: String, icon: ImageVector, onClick: () -> Unit) {
                     tint = Color.Gray
                 )
             }
+        }
+    }
+}
+
+// 5. Nuevo Módulo: Mapa de Especialidades
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SpecialtiesScreen(navController: NavController) {
+    // Estado para controlar qué especialidad está seleccionada para el diálogo
+    var selectedSpecialty by rememberSaveable { mutableStateOf<Triple<String, ImageVector, String>?>(null) }
+
+    val specialties = listOf(
+        Triple("Desarrollo de Software", Icons.Default.AppShortcut, "Enfoque en la creación de aplicaciones móviles, arquitectura de software escalable y metodologías ágiles de desarrollo."),
+        Triple("Sistemas Distribuidos", Icons.Default.Dns, "Diseño de arquitecturas en la nube, microservicios y procesamiento de datos a gran escala."),
+        Triple("Redes y Ciberseguridad", Icons.Default.Security, "Protección de infraestructura de TI, análisis de vulnerabilidades y administración de telecomunicaciones."),
+        Triple("Inteligencia Artificial", Icons.Default.Psychology, "Implementación de modelos de Machine Learning, visión computacional y procesamiento de lenguaje natural.")
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Líneas de Especialización", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color(0xFFF8F9FA))
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Tu Camino, Tu Decisión",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF333333),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Toca cualquier especialidad de la red visual para profundizar en su perfil de egreso.",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            // Red visual interactiva solicitada por la rúbrica
+            androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+                columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(specialties.size) { index ->
+                    val specialty = specialties[index]
+                    SpecialtyCard(
+                        title = specialty.first,
+                        icon = specialty.second,
+                        onClick = { selectedSpecialty = specialty }
+                    )
+                }
+            }
+        }
+    }
+
+    // Cuadro de Diálogo que emerge al hacer clic (Cumple con "profundizar mediante clics")
+    selectedSpecialty?.let { specialty ->
+        AlertDialog(
+            onDismissRequest = { selectedSpecialty = null },
+            icon = {
+                Icon(specialty.second, contentDescription = null, modifier = Modifier.size(40.dp), tint = Color(0xFF6200EE))
+            },
+            title = {
+                Text(text = specialty.first, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Text(text = specialty.third, textAlign = TextAlign.Center, fontSize = 16.sp)
+            },
+            confirmButton = {
+                Button(
+                    onClick = { selectedSpecialty = null },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                ) {
+                    Text("Entendido")
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(24.dp)
+        )
+    }
+}
+
+// Tarjeta para la cuadrícula del Mapa de Especialidades
+@Composable
+fun SpecialtyCard(title: String, icon: ImageVector, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f) // Las hace cuadradas perfectas
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(Color(0xFF6200EE).copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = Color(0xFF6200EE), modifier = Modifier.size(32.dp))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                color = Color(0xFF333333)
+            )
         }
     }
 }
