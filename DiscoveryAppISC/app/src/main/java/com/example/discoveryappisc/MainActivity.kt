@@ -330,7 +330,6 @@ fun QRCodeSection() {
         }
     }
 }
-
 // Componentes conservados (con ligeros ajustes de diseño)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
