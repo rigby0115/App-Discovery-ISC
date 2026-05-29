@@ -37,6 +37,7 @@ sealed class Screen(val route: String) {
     object Curriculum : Screen("curriculum")
     object Career : Screen("career")
     object Quiz : Screen("quiz")
+     object Specialties : Screen("specialties")
 }
 
 class MainActivity : ComponentActivity() {
@@ -62,6 +63,7 @@ fun ISCAppNavigation() {
         composable(Screen.Curriculum.route) { CurriculumScreen(navController) }
         composable(Screen.Career.route) { CareerScreen(navController) }
         composable(Screen.Quiz.route) { QuizScreen(navController) }
+        composable(Screen.Specialties.route) { SpecialtiesScreen(navController) }
     }
 }
 
@@ -108,6 +110,9 @@ fun SplashScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
+     // Necesario para lanzar el Intent hacia WhatsApp
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -116,6 +121,24 @@ fun HomeScreen(navController: NavController) {
                     containerColor = Color.Transparent
                 )
             )
+        }
+         // AQUÍ AGREGAMOS EL BOTÓN FLOTANTE (FAB)
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    // Intent implícito hacia WhatsApp
+                    val phoneNumber = "5212721234567" // Número de admisiones (puedes ajustarlo luego)
+                    val message = "¡Hola! Descargué la app Descubre ISC y me gustaría recibir más información sobre la carrera y el proceso de admisión."
+                    val uri = Uri.parse("https://api.whatsapp.com/send?phone=$phoneNumber&text=${Uri.encode(message)}")
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    context.startActivity(intent)
+                },
+                containerColor = Color(0xFF25D366), // Color verde de WhatsApp
+                contentColor = Color.White,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            ) {
+                Icon(Icons.Default.Send, contentDescription = "Contacto Admisiones")
+            }
         }
     ) { padding ->
         LazyColumn(
